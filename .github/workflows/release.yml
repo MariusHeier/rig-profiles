@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate checksums
+        run: |
+          sha256sum rig.ps1 > checksums.txt
+          echo "## SHA256 Checksums" > release_notes.md
+          echo '```' >> release_notes.md
+          cat checksums.txt >> release_notes.md
+          echo '```' >> release_notes.md
+          echo "" >> release_notes.md
+          echo "## Verify" >> release_notes.md
+          echo '```powershell' >> release_notes.md
+          echo '(Get-FileHash rig.ps1 -Algorithm SHA256).Hash' >> release_notes.md
+          echo '```' >> release_notes.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            rig.ps1
+            checksums.txt
+          body_path: release_notes.md
